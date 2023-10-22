@@ -1,20 +1,11 @@
-import io
-import tempfile
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
-from mindee import Client
-from mindee.documents import TypeReceiptV5
+from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from uuid import uuid4
 from fastapi import FastAPI
 from repository.users_repository import SessionLocal, User
 from dto.user_dto import UserDTO
 from dto.user_request import UserRequest
 from sqlalchemy.orm import Session
-
-import os
-from dotenv import load_dotenv
-load_dotenv()
-mindee_api_key = os.getenv("MINDEE_API_KEY")
-mindee_client = Client(api_key=mindee_api_key)
+from service.image_processor import process_image
 
 app = FastAPI()
 
@@ -66,23 +57,5 @@ async def create_user(request: UserRequest, db: Session = Depends(get_db)):
     return user_dto
 
 @app.post("/process-image/")
-async def process_image(image: UploadFile):
-    try:
-        # Read the image data from the UploadFile object
-        image_data = await image.read()
-
-        # Create a temporary file and write the image data to it
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
-            temp_file.write(image_data)
-
-        # Create a Mindee document from the temporary file
-        input_doc = mindee_client.doc_from_path(temp_file.name)
-        
-        # Replace "TypeReceiptV5" with the appropriate parsing type
-        result = input_doc.parse(TypeReceiptV5)
-
-        # Process the parsed data or return it as needed
-        return {"parsed_data": result.document}
-
-    except Exception as e:
-        return {"error": str(e)}
+async def process_image_api(image: UploadFile):
+    return await process_image(image)
