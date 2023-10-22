@@ -5,7 +5,7 @@ from repository.users_repository import SessionLocal, User
 from dto.user_dto import UserDTO
 from dto.user_request import UserRequest
 from sqlalchemy.orm import Session
-from service.image_processor import process_image
+from service.image_processor import process_nanonets_image, process_mindee_image
 
 app = FastAPI()
 
@@ -15,6 +15,15 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@app.post("/process-image/mindee")
+async def process_image_mindee(image: UploadFile):
+    return await process_mindee_image(image)
+
+@app.post("/process-image/nanonet")
+async def process_image_nanonet(image: UploadFile):
+    return await process_nanonets_image(image)
+
 
 @app.get("/users/{user_id}", response_model=UserDTO)
 async def get_user_info(user_id: str, db: Session = Depends(get_db)):
@@ -55,7 +64,3 @@ async def create_user(request: UserRequest, db: Session = Depends(get_db)):
     )
 
     return user_dto
-
-@app.post("/process-image/")
-async def process_image_api(image: UploadFile):
-    return await process_image(image)
