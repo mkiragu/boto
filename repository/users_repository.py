@@ -12,8 +12,9 @@ db_username = os.getenv("DB_USERNAME")
 db_password = os.getenv("DB_PASSWORD")
 db_host =  os.getenv("DB_HOST")
 db_port =  os.getenv("DB_PORT")
+db_name = os.getenv("DB_NAME")
 
-DATABASE_URL = f'postgresql://{db_username}:{db_password}@{db_host}:{db_port}/mypfinance-backend'
+DATABASE_URL = f'postgresql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}'
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
