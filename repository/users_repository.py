@@ -5,7 +5,6 @@ from sqlalchemy import Column, Integer, String
 
 import os
 from dotenv import load_dotenv
-
 load_dotenv()
 
 db_username = os.getenv("DB_USERNAME")
