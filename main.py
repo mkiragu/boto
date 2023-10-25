@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, UploadFile
 from uuid import uuid4
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Header
+from typing import Annotated
 from repository.users_repository import SessionLocal, User
 from dto.user_dto import UserDTO
-from dto.user_request import UserRequest
+from dto.signup_request import SignupRequest
+from dto.signin_request import SigninRequest
 from sqlalchemy.orm import Session
 from service.image_processor import process_nanonets_image, process_mindee_image
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,7 +42,7 @@ def get_db():
         db.close()
 
 @app.post("/signup")
-async def signup(request: UserRequest, db: Session = Depends(get_db)):
+async def signup(request: SignupRequest, db: Session = Depends(get_db)):
    email = request.email
    password = request.password
 
@@ -72,20 +74,21 @@ async def signup(request: UserRequest, db: Session = Depends(get_db)):
        return HTTPException(detail={'message': 'Error Creating User'}, status_code=400)
 
 @app.post("/signin")
-async def signin(request: Request):
-   req_json = await request.json()
-   email = req_json['email']
-   password = req_json['password']
+async def signin(request: SigninRequest):
    try:
-       user = pb.auth().sign_in_with_email_and_password(email, password)
+       user = pb.auth().sign_in_with_email_and_password(request.email, request.password)
        jwt = user['idToken']
        return JSONResponse(content={'token': jwt}, status_code=200)
    except:
        return HTTPException(detail={'message': 'There was an error logging in'}, status_code=400)
    
 @app.get("/users/{user_id}", response_model=UserDTO)
-async def get_user_info(user_id: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+async def get_user_info(user_id: str, 
+                        db: Session = Depends(get_db),
+                        authorization: Annotated[str | None, Header()] = None):
+    
+    auth_user = authorize_user(authorization)
+    user = db.query(User).filter(auth_user["uid"] == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
@@ -103,3 +106,6 @@ def add_user_locally(user: User, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+def authorize_user(authorization: Annotated[str | None, Header()] = None):
+    return auth.verify_id_token(authorization)
