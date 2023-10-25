@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column('first_name', sa.String),
         sa.Column('last_name', sa.String),
         sa.Column('age', sa.Integer, nullable=True),
+        sa.Column('gender', sa.String, nullable=True)
     )
 
 
