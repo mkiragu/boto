@@ -45,6 +45,7 @@ class Wallet(Base):
     user_id = Column(String, ForeignKey('user.uid'))
     user = relationship("User", back_populates="wallets")
     balance = Column(DECIMAL)
+    currency = Column(String)
     created_on = Column(DateTime, server_default=func.now())
     updated_on = Column(DateTime, onupdate=func.now())
 
@@ -70,6 +71,7 @@ class Transaction(Base):
     category = relationship("Category", back_populates="transactions")
     description = Column(String)
     amount = Column(DECIMAL)
+    type = Column(String)
     created_on = Column(DateTime, server_default=func.now())
     updated_on = Column(DateTime, onupdate=func.now())
 
