@@ -162,3 +162,6 @@ cython_debug/
 
 mypfinance-service-account.json
 firebase-config.json
+requirements.in
+requirements.txt
+alembic.ini
