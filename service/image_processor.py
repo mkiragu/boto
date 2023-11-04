@@ -4,7 +4,59 @@ from fastapi import UploadFile
 from mindee.documents import TypeReceiptV5
 import requests
 import os
+import boto3
 from dotenv import load_dotenv
+
+async def process_aws_image(image: UploadFile):
+
+	load_dotenv()
+	aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+	aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY_ID")
+	client = boto3.client('textract', aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key)
+
+	# Read the data from the UploadFile
+	data = await image.read()
+    
+	response = client.analyze_expense(Document={'Bytes': data})
+
+	summary_fields_value_pairs = {}
+
+	# Iterate through the data to extract LabelDetection and ValueDetection
+	for summary_field in response["ExpenseDocuments"][0]["SummaryFields"]:
+		label_detection = summary_field.get("Type", {}).get("Text")
+		value_detection = summary_field.get("ValueDetection", {}).get("Text")
+		if label_detection and value_detection:
+			summary_fields_value_pairs[label_detection] = value_detection
+
+	print(summary_fields_value_pairs)
+
+	# Create a dictionary to store LineItems and their Type-ValueDetection pairs
+	line_item_pairs = []
+
+	# Iterate through the data to extract Type and ValueDetection
+	for line_item_group in response["ExpenseDocuments"][0]["LineItemGroups"]:
+		
+		# Iterate through LineItems
+		for line_item in line_item_group["LineItems"]:
+			line_item_expense_fields = line_item.get("LineItemExpenseFields", [])
+			
+			# Initialize a dictionary to store Type-ValueDetection pairs for this LineItem
+			line_item_data = {}
+			
+			# Iterate through LineItemExpenseFields
+			for field in line_item_expense_fields:
+				field_type = field["Type"]["Text"]
+				value_detection = field["ValueDetection"]["Text"]
+				
+				# Add the Type-ValueDetection pair to the LineItem dictionary
+				line_item_data[field_type] = value_detection
+			
+			# Append the LineItem dictionary to the list for this LineItemGroup
+			line_item_pairs.append(line_item_data)
+
+	summary_fields_value_pairs["line_items"] = line_item_pairs
+
+	return summary_fields_value_pairs
 
 async def process_mindee_image(image: UploadFile):
 	try:
@@ -56,3 +108,4 @@ async def process_nanonets_image(image: UploadFile):
 
 	except Exception as e:
 		return {"error": str(e)}
+	

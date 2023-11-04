@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from enum import Enum
+from decimal import Decimal
 
 class Currency(Enum):
     BGN = "BGN"
@@ -12,6 +13,5 @@ class WalletRequest(BaseModel):
     currency: Currency
 
 class WalletResponse(BaseModel):
-    uid: str
-    balance: str
+    balance: Decimal
     currency: str
