@@ -44,6 +44,7 @@ class Wallet(Base):
     uid = Column(Integer, primary_key=True, index=True)
     user_id = Column(String, ForeignKey('user.uid'))
     user = relationship("User", back_populates="wallets")
+    name = Column(String)
     balance = Column(DECIMAL)
     currency = Column(String)
     created_on = Column(DateTime, server_default=func.now())

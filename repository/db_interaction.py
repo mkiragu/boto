@@ -1,11 +1,11 @@
 from repository.db_models import User, Category, Transaction, Wallet
 import uuid
+import logging
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from dto.transaction_dto import TransactionType
 from dto.wallet_dto import Currency
 from exceptions.resource_not_found import ResourceNotFoundException
-
 
 def get_user(user_id: str, db: Session):
     user = get_user_info(user_id, db)
@@ -18,10 +18,39 @@ def get_user(user_id: str, db: Session):
 def get_user_info(user_id: str, db: Session):
     return db.query(User).get(user_id)
 
-def add_user_locally(user: User, db: Session):
+def setup_user(user: User, db: Session):
+
     db.add(user)
+    logging.info(f'Added user with ID {user.uid}')
+
+    # When user registers, we automatically asign 'Others' Category
+    category_id = str(uuid.uuid4())
+    category_model = Category(
+        uid = category_id,
+        user_id = user.uid,
+        name = 'Others'
+    )
+    db.add(category_model)
+    logging.info(f'Added category with ID {category_id}')
+
+    wallet_id = str(uuid.uuid4())
+    wallet_model = Wallet(
+        uid = wallet_id,
+        user_id = user.uid,
+        name = 'My Wallet',
+        balance = 0,
+        currency = 'USD'
+    )
+    db.add(wallet_model)
+    logging.info(f'Added wallet with ID {wallet_id}')
+
     db.commit()
     db.refresh(user)
+    db.refresh(category_model)
+    db.refresh(wallet_model)
+
+def get_category_id(name: str, auth_user_id: str, db: Session):
+    return db.query(Category).filter(Category.user_id == auth_user_id).filter(Category.name == name).first().uid
 
 def add_wallet_locally(wallet: Wallet, db: Session):
     db.add(wallet)

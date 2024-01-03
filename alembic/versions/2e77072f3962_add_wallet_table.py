@@ -29,6 +29,7 @@ def upgrade() -> None:
     op.create_table(
         'wallet',
         Column('uid', String, primary_key=True),
+        Column('name', String),
         Column('balance', DECIMAL),
         Column('user_id', String, ForeignKey('user.uid')),
         Column('created_on', DateTime(timezone=True), server_default=func.now()),

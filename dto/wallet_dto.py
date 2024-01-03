@@ -9,6 +9,7 @@ class Currency(Enum):
     EUR = "EUR"
 
 class WalletRequest(BaseModel):
+    name: str
     balance: str
     currency: Currency
 

@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends
 from repository.db_models import SessionLocal, User
-from repository.db_interaction import add_user_locally
+from repository.db_interaction import setup_user
 from dto.signup_request import SignupRequest
 from dto.signin_request import SigninRequest
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 import logging
+import uuid
 
  # Firebase Configs:
 import firebase_admin
@@ -58,7 +59,7 @@ async def signup(request: SignupRequest, db: Session = Depends(get_db)):
             gender=request.gender
         )
 
-        add_user_locally(user_model, db)
+        setup_user(user_model, db)
 
         return JSONResponse(content={'message': 'Successfully created user'}, status_code=200, media_type='application/json')
     except Exception as error:

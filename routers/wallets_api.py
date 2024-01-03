@@ -32,6 +32,7 @@ async def create_wallet(request: WalletRequest,
     wallet_model = Wallet(
         uid = wallet_id,
         user_id = auth_user_id,
+        name = request.name,
         balance = balance_decimal,
         currency = request.currency
     )
